@@ -1,0 +1,6 @@
+- name: dpkg-reconfigure console-setup
+  command: /usr/sbin/dpkg-reconfigure --frontend noninteractive console-setup
+- name: dpkg-reconfigure keyboard-configuration
+  command: /usr/sbin/dpkg-reconfigure --frontend noninteractive keyboard-configuration
+- name: dpkg-reconfigure tzdata
+  command: /usr/sbin/dpkg-reconfigure --frontend noninteractive tzdata

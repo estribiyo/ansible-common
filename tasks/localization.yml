@@ -1,0 +1,41 @@
+- name: Generating locales
+  locale_gen: name={{ locale }} state=present
+  tags: common
+
+- name: Check locales
+  shell: "locale | grep ^LANG= | cut -d= -f2"
+  register: locales_out
+  changed_when: locales_out.stdout != locale
+  tags: common
+
+- name: Setting locales "{{ locale }}"
+  command: /usr/sbin/update-locale LANG={{ locale }} LANGUAGE={{ locale }} LC_ALL={{ locale }}
+  when: locales_out.stdout != locale
+  tags: common
+
+- name: Linking timezone to /etc/localtime
+  file: src=/usr/share/zoneinfo/{{ timezone }} dest=/etc/localtime state=link
+  tags: common
+
+- name: Setting timezone to {{ timezone }}
+  lineinfile: dest=/etc/timezone state=present line={{ timezone }} regexp='.*' create=yes
+  notify: dpkg-reconfigure tzdata
+  tags: common
+
+- name: Check keyboard layout
+  shell: "cat /etc/default/keyboard | grep XKBLAYOUT | cut -d'=' -f2 | sed 's/\"//g'"
+  register: kbdlayout
+  changed_when: kbdlayout.stdout != keymap
+  tags: common
+
+- name: Change keymap "{{ kbdlayout.stdout }}" to "{{ keymap }}"
+  command: localectl set-keymap "{{ keymap }}"
+  when: kbdlayout.stdout != keymap
+  notify: dpkg-reconfigure keyboard-configuration
+  tags: common
+
+- name: Installing "{{ keymap }}" language for hunspell
+  apt:
+    name: "hunspell-{{ keymap }}"
+    state: present
+  tags: common

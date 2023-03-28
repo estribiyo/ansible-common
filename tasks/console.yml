@@ -1,0 +1,11 @@
+- name: Changing console font to '{{ fontface }}'
+  lineinfile:
+    dest: /etc/default/console-setup
+    state: present
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    create: true
+  with_items:
+    - { regexp: '^FONTFACE=', line: 'FONTFACE="{{ fontface }}"'}
+  notify: dpkg-reconfigure console-setup
+  tags: [ common ]
