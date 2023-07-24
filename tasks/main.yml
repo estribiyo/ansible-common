@@ -11,6 +11,7 @@
     pkg:
       - git
       - vim
+      - rsync
 
 - name: Uninstall NetworkManager
   apt:
