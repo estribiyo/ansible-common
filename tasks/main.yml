@@ -13,6 +13,7 @@
       - vim
       - rsync
       - curl
+      - keymap
 
 - name: Uninstall NetworkManager
   apt:
