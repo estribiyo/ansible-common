@@ -1,14 +1,4 @@
-desktop_name: 'Escritorio'
-locale: es_ES.UTF-8
-timezone: Europe/Madrid
-keymap: es
-fontface: Terminus
-git_server: 'desarrollo.casadalourensa.es'
-git_port: '2224'
-wifi:
-  name: 'Default'
-  password: 'Passw0rd'
-user:
-  login: defaultuser
-  # https://docs.ansible.com/ansible/latest/reference_appendices/faq.html#how-do-i-generate-encrypted-passwords-for-the-user-module
-  password: '$6$croEe4UWgiXLNj/U$xf6Q/BmIlxhkVPkrtVLISYZAh6Dtmo0mJzw6qveVmTc98fAGXYsGDB3lbzc3bFV/sVepW7ED1DiqYTUjXhY2j1'
+common_locale: "es_ES.UTF-8"
+common_timezone: "Europe/Madrid"
+common_keymap: "es"
+common_fontface: "Terminus"
