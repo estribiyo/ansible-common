@@ -3,7 +3,7 @@
     upgrade: true
     update_cache: true
     autoremove: true
-    cache_valid_time: 86400 
+    cache_valid_time: 86400
 
 - name: Install packages
   apt:
@@ -40,12 +40,12 @@
 
 - name: No wifi
   set_fact:
-    wifi_adapter: ''
+    wifi_adapter: ""
 
 - name: Get wifi adapter
   set_fact:
-    wifi_adapter: '{{ item }}'
-  loop: '{{ ansible_facts.interfaces }}'
+    wifi_adapter: "{{ item }}"
+  loop: "{{ ansible_facts.interfaces }}"
   when: 'item.startswith("wl")'
 
 - name: Configure WiFi adapter
