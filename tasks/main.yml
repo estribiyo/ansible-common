@@ -1,17 +1,7 @@
 ---
 - block:
-    - when: common_enabled | bool
-      ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
-
-    - when: common_enabled | bool
-      ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
+    - ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
+    - ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
   tags:
     - install-all
     - install-common
-
-- block:
-    - when: not common_enabled | bool
-      ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"
-  tags:
-    - setup-all
-    - setup-common
