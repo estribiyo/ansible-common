@@ -1,62 +1,17 @@
-- name: Update and upgrade apt packages
-  apt:
-    upgrade: true
-    update_cache: true
-    autoremove: true
-    cache_valid_time: 86400
+---
+- block:
+    - when: common_enabled | bool
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
 
-- name: Install packages
-  apt:
-    state: present
-    pkg:
-      - git
-      - vim
-      - rsync
-      - curl
+    - when: common_enabled | bool
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
+  tags:
+    - install-all
+    - install-common
 
-- name: Uninstall NetworkManager
-  apt:
-    state: absent
-    pkg:
-      - network-manager
-
-- name: Localization
-  include_tasks:
-    file: localization.yml
-
-- name: Console
-  include_tasks:
-    file: console.yml
-
-- name: Configure Ethernet adapter
-  blockinfile:
-    dest: /etc/network/interfaces.d/ethernet
-    state: present
-    block: |
-      auto eth0
-      allow-hotplug eth0
-      iface eth0 inet dhcp
-    create: yes
-
-- name: No wifi
-  set_fact:
-    wifi_adapter: ""
-
-- name: Get wifi adapter
-  set_fact:
-    wifi_adapter: "{{ item }}"
-  loop: "{{ ansible_facts.interfaces }}"
-  when: 'item.startswith("wl")'
-
-- name: Configure WiFi adapter
-  blockinfile:
-    dest: /etc/network/interfaces.d/wifi
-    state: present
-    block: |
-      allow-hotplug {{ wifi_adapter }}
-      iface {{ wifi_adapter }} inet dhcp
-      wpa-ssid {{ wifi['name'] }}
-      wpa-psk {{ wifi['password'] }}
-      wireless-power off
-    create: yes
-  when: wifi_adapter != ''
+- block:
+    - when: not common_enabled | bool
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"
+  tags:
+    - setup-all
+    - setup-common
