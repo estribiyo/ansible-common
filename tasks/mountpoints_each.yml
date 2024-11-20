@@ -2,7 +2,6 @@
   ansible.builtin.file:
     path: "{{ disk.mount_path }}"
     state: directory
-    mode: "0755"
 
 - name: Perform the mounting on the mount device
   ansible.builtin.mount:
