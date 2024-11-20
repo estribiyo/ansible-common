@@ -31,8 +31,8 @@
     block: |
       allow-hotplug {{ wifi_adapter }}
       iface {{ wifi_adapter }} inet dhcp
-      wpa-ssid {{ wifi['name'] }}
-      wpa-psk {{ wifi['password'] }}
+      wpa-ssid {{ common_wifi.ssid }}
+      wpa-psk {{ common_wifi.password }}
       wireless-power off
     create: yes
   when: wifi_adapter != ''
