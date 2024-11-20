@@ -1,0 +1,5 @@
+- name: Create and mount each partition
+  ansible.builtin.include_tasks: mountpoints_each.yml
+  loop: "{{ common_disks }}"
+  loop_control:
+    loop_var: disk
