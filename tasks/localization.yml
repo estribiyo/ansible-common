@@ -27,11 +27,12 @@
 
 - name: Change keymap "{{ kbdlayout.stdout }}" to "{{ common_keymap }}"
   block:
-    command: localectl set-keymap "{{ common_keymap }}"
-    when: kbdlayout.stdout != common_keymap
+    - name: Set keymap to "{{ common_keymap }}" using localectl 
+      command: localectl set-keymap "{{ common_keymap }}"
   rescue:
     lineinfile: dest=/etc/default/keyboard state=present regexp='^XKBLAYOUT=' line="XKBLAYOUT='{{ common_keymap }}'" create=yes
   notify: dpkg-reconfigure keyboard-configuration
+  when: kbdlayout.stdout != common_keymap
 
 - name: Installing "{{ common_keymap }}" language for hunspell
   apt:
