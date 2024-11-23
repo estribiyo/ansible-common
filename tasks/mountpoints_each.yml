@@ -1,12 +1,24 @@
 - name: Create the mount directory
-  ansible.builtin.file:
-    path: "{{ disk.mount_path }}"
-    state: directory
-    mode: "2777"
+  block:
+    - name: Create "{{ disk.mount_path }}"
+      ansible.builtin.file:
+        path: "{{ disk.mount_path }}"
+        state: directory
+        mode: "2777"
+  rescue:
+    - name: Could not create the mount directory
+      debug:
+        msg: "Failed to create the mount directory: {{ disk.mount_path }}"
 
 - name: Perform the mounting on the mount device
-  ansible.builtin.mount:
-    fstype: "{{ disk.type }}"
-    src: "{{ disk.src }}"
-    path: "{{ disk.mount_path }}"
-    state: mounted
+  block:
+    - name: Mount "{{ disk.mount_path }}"
+      ansible.builtin.mount:
+        fstype: "{{ disk.type }}"
+        src: "{{ disk.src }}"
+        path: "{{ disk.mount_path }}"
+        state: mounted
+  rescue:
+    - name: Could not mount the device
+      debug:
+        msg: "Failed to mount the device: {{ disk.mount_path }}"
