@@ -30,7 +30,8 @@
     - name: Set keymap to "{{ common_keymap }}" using localectl 
       command: localectl set-keymap "{{ common_keymap }}"
   rescue:
-    lineinfile: dest=/etc/default/keyboard state=present regexp='^XKBLAYOUT=' line="XKBLAYOUT='{{ common_keymap }}'" create=yes
+    - name: Setting keyboard layout to "{{ common_keymap }}"
+      lineinfile: dest=/etc/default/keyboard state=present regexp='^XKBLAYOUT=' line="XKBLAYOUT='{{ common_keymap }}'" create=yes
   notify: dpkg-reconfigure keyboard-configuration
   when: kbdlayout.stdout != common_keymap
 
