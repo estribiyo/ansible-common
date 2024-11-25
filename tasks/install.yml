@@ -14,6 +14,7 @@
       - rsync
       - curl
       - bat
+      - nfs-common
 
 - name: Localization
   include_tasks:
