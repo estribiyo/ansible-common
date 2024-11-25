@@ -23,9 +23,15 @@
   include_tasks:
     file: console.yml
 
-- name: Network
-  include_tasks:
-    file: network.yml
+- name: Aliases
+  lineinfile:
+    dest: /etc/bash.bashrc
+    regexp: "^alias cat=.+$"
+    line: "alias cat=batcat"
+
+# - name: Network
+#   include_tasks:
+#     file: network.yml
 
 - name: Mount points
   include_tasks:
