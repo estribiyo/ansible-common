@@ -27,7 +27,7 @@
 
 - name: Change keymap "{{ kbdlayout.stdout }}" to "{{ common_keymap }}"
   block:
-    - name: Set keymap to "{{ common_keymap }}" using localectl 
+    - name: Set keymap to "{{ common_keymap }}" using localectl
       command: localectl set-keymap "{{ common_keymap }}"
   rescue:
     - name: Setting keyboard layout to "{{ common_keymap }}"
