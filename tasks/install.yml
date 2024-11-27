@@ -26,20 +26,12 @@
 
 - name: Aliases
   lineinfile:
-    regexp: "^alias cat=.+$"
-    line: "alias cat=batcat"
-
-  lineinfile:
     dest: /etc/bash.bashrc
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
   loop:
-    - { regexp: '^alias cat=.+$', line: 'alias cat="batcat"' }
-    - { regexp: '^alias ls=.+$', line: 'alias ls="ls -la"' }
-
-# - name: Network
-#   include_tasks:
-#     file: network.yml
+    - { regexp: "^alias cat=.+$", line: 'alias cat="batcat"' }
+    - { regexp: "^alias ls=.+$", line: 'alias ls="ls -la"' }
 
 - name: Mount points
   include_tasks:
