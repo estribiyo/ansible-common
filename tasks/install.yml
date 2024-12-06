@@ -24,10 +24,10 @@
   include_tasks:
     file: console.yml
 
-- name: Network
-  include_tasks:
-    file: network.yml
-
 - name: Mount points
   include_tasks:
     file: mountpoints.yml
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ ansible_host }}"
