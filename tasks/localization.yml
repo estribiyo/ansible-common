@@ -5,6 +5,7 @@
     - name: Verify keymap using localectl
       shell: localectl | grep "VC Keymap" | cut -d ' ' -f 4
       register: new_kbdlayout
+    - name: Assert that the keymap is set correctly
       assert:
         that:
           - new_kbdlayout.stdout == common_keymap
@@ -21,6 +22,7 @@
     - name: Verify fallback keyboard layout
       shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2'
       register: fallback_kbdlayout
+    - name: Assert that the fallback keymap is set correctly
       assert:
         that:
           - fallback_kbdlayout.stdout == common_keymap
