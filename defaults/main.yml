@@ -2,3 +2,4 @@ common_locale: "es_ES.UTF-8"
 common_timezone: "Europe/Madrid"
 common_keymap: "es"
 common_fontface: "Terminus"
+common_disks: []
