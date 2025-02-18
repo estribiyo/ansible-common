@@ -13,8 +13,18 @@
 - name: Linking timezone to /etc/localtime
   file: src=/usr/share/zoneinfo/{{ common_timezone }} dest=/etc/localtime state=link
 
-- name: Setting timezone to {{ common_timezone }}
-  lineinfile: dest=/etc/timezone state=present line={{ common_timezone }} regexp='.*' create=yes
+- name: Check if timezone is correct
+  shell: "cat /etc/timezone"
+  register: timezone_check
+  changed_when: timezone_check.stdout != common_timezone
+
+- name: Set timezone if needed
+  lineinfile: 
+    dest: /etc/timezone
+    state: present
+    line: "{{ common_timezone }}"
+    regexp: '.*'
+  when: timezone_check.stdout != common_timezone
   notify: dpkg-reconfigure tzdata
 
 - name: Check keyboard layout
@@ -29,9 +39,30 @@
   block:
     - name: Set keymap to "{{ common_keymap }}" using localectl
       command: localectl set-keymap "{{ common_keymap }}"
+    - name: Verify keymap using localectl
+      shell: localectl | grep "VC Keymap" | cut -d ' ' -f 4
+      register: new_kbdlayout
+      assert:
+        that:
+          - new_kbdlayout.stdout == common_keymap
+        fail_msg: "Keymap change failed!"
+        success_msg: "Keymap set correctly"
   rescue:
     - name: Setting keyboard layout to "{{ common_keymap }}"
-      lineinfile: dest=/etc/default/keyboard state=present regexp='^XKBLAYOUT=' line="XKBLAYOUT='{{ common_keymap }}'" create=yes
+      lineinfile: 
+        dest: /etc/default/keyboard
+        state: present
+        regexp: '^XKBLAYOUT='
+        line: "XKBLAYOUT='{{ common_keymap }}'"
+        create: yes
+    - name: Verify fallback keyboard layout
+      shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2'
+      register: fallback_kbdlayout
+      assert:
+        that:
+          - fallback_kbdlayout.stdout == common_keymap
+        fail_msg: "Fallback keyboard layout setting failed!"
+        success_msg: "Fallback keyboard layout set correctly"
   notify: dpkg-reconfigure keyboard-configuration
   when: kbdlayout.stdout != common_keymap
 
