@@ -1,40 +1,3 @@
-- name: Generating locales
-  locale_gen: name={{ common_locale }} state=present
-
-- name: Check locales
-  shell: "locale | grep ^LANG= | cut -d= -f2"
-  register: locales_out
-  changed_when: locales_out.stdout != common_locale
-
-- name: Setting locales "{{ common_locale }}"
-  command: /usr/sbin/update-locale LANG={{ common_locale }} LANGUAGE={{ common_locale }} LC_ALL={{ common_locale }}
-  when: locales_out.stdout != common_locale
-
-- name: Linking timezone to /etc/localtime
-  file: src=/usr/share/zoneinfo/{{ common_timezone }} dest=/etc/localtime state=link
-
-- name: Check if timezone is correct
-  shell: "cat /etc/timezone"
-  register: timezone_check
-  changed_when: timezone_check.stdout != common_timezone
-
-- name: Set timezone if needed
-  lineinfile: 
-    dest: /etc/timezone
-    state: present
-    line: "{{ common_timezone }}"
-    regexp: '.*'
-  when: timezone_check.stdout != common_timezone
-  notify: dpkg-reconfigure tzdata
-
-- name: Check keyboard layout
-  shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2 | sed ''s/"//g'''
-  register: kbdlayout
-  changed_when: kbdlayout.stdout != common_keymap
-
-# - name: Setting keyboard layout to "{{ common_keymap }}"
-#   lineinfile: dest=/etc/default/keyboard state=present regexp='^XKBLAYOUT=' line="XKBLAYOUT='{{ common_keymap }}'" create=yes
-
 - name: Change keymap "{{ kbdlayout.stdout }}" to "{{ common_keymap }}"
   block:
     - name: Set keymap to "{{ common_keymap }}" using localectl
@@ -65,8 +28,3 @@
         success_msg: "Fallback keyboard layout set correctly"
   notify: dpkg-reconfigure keyboard-configuration
   when: kbdlayout.stdout != common_keymap
-
-- name: Installing "{{ common_keymap }}" language for hunspell
-  apt:
-    name: "hunspell-{{ common_keymap }}"
-    state: present
