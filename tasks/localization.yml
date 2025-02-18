@@ -26,5 +26,8 @@
           - fallback_kbdlayout.stdout == common_keymap
         fail_msg: "Fallback keyboard layout setting failed!"
         success_msg: "Fallback keyboard layout set correctly"
+  when: kbdlayout.stdout != common_keymap
+
+- name: Trigger dpkg-reconfigure for keyboard-configuration
   notify: dpkg-reconfigure keyboard-configuration
   when: kbdlayout.stdout != common_keymap
