@@ -30,6 +30,7 @@
         success_msg: "Fallback keyboard layout set correctly"
   when: kbdlayout.stdout != common_keymap
 
-- name: Trigger dpkg-reconfigure for keyboard-configuration
-  notify: dpkg-reconfigure keyboard-configuration
+- name: Update keyboard configuration and trigger dpkg-reconfigure
+  command: dpkg-reconfigure keyboard-configuration
   when: kbdlayout.stdout != common_keymap
+  notify: dpkg-reconfigure keyboard-configuration
