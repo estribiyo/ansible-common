@@ -108,5 +108,4 @@
   command: dpkg-reconfigure keyboard-configuration -f noninteractive
   args:
     creates: /etc/default/keyboard
-  when: keymaps.stdout is defined and keymaps.stdout | length > 0 and
-    (lookup('file', '/etc/default/keyboard') is not search('XKBLAYOUT={{ common_keymap }}'))
+  when: keymaps.stdout is defined and keymaps.stdout | length > 0 and (lookup('file', '/etc/default/keyboard') is not search('XKBLAYOUT={{ common_keymap }}'))
