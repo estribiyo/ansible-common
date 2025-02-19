@@ -60,7 +60,7 @@
 - name: Assert that the fallback keymap is set correctly
   assert:
     that:
-      - (fallback_kbdlayout.stdout | trim) == common_keymap
+      - "(fallback_kbdlayout.stdout | trim | regex_replace('^''(.*)''$', '\\1')) == common_keymap"
     fail_msg: "Fallback keyboard layout setting failed!"
     success_msg: "Fallback keyboard layout set correctly!"
 
