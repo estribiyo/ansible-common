@@ -104,8 +104,18 @@
     success_msg: "Fallback keyboard layout set correctly!"
   when: keymaps.stdout is defined and keymaps.stdout | length > 0
 
+- name: Check if common_keymap is set in /etc/default/keyboard
+  shell: 'grep XKBLAYOUT /etc/default/keyboard | cut -d "=" -f2 | sed "s/\"//g"'
+  register: current_kbdlayout
+  changed_when: false
+  failed_when: false
+
+- name: Set fact to check if we need to force reconfigure keyboard
+  set_fact:
+    reconfigure_kbd: "{{ keymaps.stdout | length > 0 and current_kbdlayout.stdout != common_keymap }}"
+
 - name: Force reconfigure keyboard in non-interactive mode
   command: dpkg-reconfigure keyboard-configuration -f noninteractive
   args:
     creates: /etc/default/keyboard
-  when: keymaps.stdout is defined and keymaps.stdout | length > 0 and (lookup('file', '/etc/default/keyboard') is not search('XKBLAYOUT={{ common_keymap }}'))
+  when: reconfigure_kbd
