@@ -25,7 +25,7 @@
 - name: Assert that the keymap is set correctly
   assert:
     that:
-      - new_kbdlayout.stdout | trim == common_keymap
+      - new_kbdlayout.stdout | replace('"', '') == common_keymap
     fail_msg: "Keymap change failed!"
     success_msg: "Keymap set correctly"
 
@@ -53,7 +53,7 @@
 - name: Assert that the fallback keymap is set correctly
   assert:
     that:
-      - fallback_kbdlayout.stdout | trim == common_keymap
+      - fallback_kbdlayout.stdout | replace('"', '') == common_keymap
     fail_msg: "Fallback keyboard layout setting failed!"
     success_msg: "Fallback keyboard layout set correctly"
 
