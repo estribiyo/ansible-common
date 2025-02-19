@@ -63,23 +63,24 @@
   debug:
     var: keymaps.stdout
 
+- name: Capture localectl status
+  command: localectl status
+  register: localectl_status
+  changed_when: false
+
 - name: Set fact to check if common_keymap is available in keymaps
   set_fact:
     keymap_exists: "{{ common_keymap in keymaps.stdout | lower }}"
 
 - name: Set keymap to "{{ common_keymap }}" using localectl
   command: localectl set-keymap "{{ common_keymap }}"
-  when: keymap_exists
-  notify:
-    - dpkg-reconfigure keyboard-configuration
+  when: common_keymap is defined and common_keymap not in localectl_status.stdout
+  changed_when: true
 
-- name: Assert that the keymap is set correctly using localectl status
+- name: Ensure keymap is set correctly
   assert:
     that:
-      - "'Keymap: {{ common_keymap }}' in localectl_status.stdout"
-    fail_msg: "Keymap change failed!"
-    success_msg: "Keymap set correctly"
-  when: keymaps.stdout is defined and keymaps.stdout | length > 0
+      - "'{{ common_keymap }}' in localectl_status.stdout"
 
 - name: Setting keyboard layout to "{{ common_keymap }}" in /etc/default/keyboard (fallback)
   lineinfile:
