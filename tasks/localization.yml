@@ -1,34 +1,28 @@
-- name: Check current keyboard layout
-  shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2 | sed ''s/"//g'''
-  register: kbdlayout
+- name: Ensure console-setup and keyboard-configuration packages are installed
+  apt:
+    name:
+      - console-setup
+      - keyboard-configuration
+    state: present
+    update_cache: yes
 
-#- name: Debug current keyboard layout
-#  debug:
-#    msg: "Current keyboard layout is {{ kbdlayout.stdout }}"
+- name: Check if keymaps are available
+  command: localectl list-keymaps
+  register: keymaps
+  changed_when: false
+  failed_when: false
+
+- name: Debug keymaps available
+  debug:
+    msg: "Keymaps available: {{ keymaps.stdout }}"
+  when: keymaps.stdout is defined and keymaps.stdout | length > 0
 
 - name: Set keymap to "{{ common_keymap }}" using localectl
   command: localectl set-keymap "{{ common_keymap }}"
   register: localectl_output
-
-#- name: Debug localectl output
-#  debug:
-#    msg: "localectl output: {{ localectl_output }}"
-
-- name: Verify keymap by checking /etc/default/keyboard file
-  shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2 | sed ''s/"//g'''
-  register: new_kbdlayout
-
-#- name: Debug new keymap after applying localectl
-#  debug:
-#    msg: "New keymap after applying localectl: {{ new_kbdlayout.stdout }}"
-
-- name: Check the current system keymap using localectl status
-  command: localectl status
-  register: localectl_status
-
-#- name: Debug localectl status output
-#  debug:
-#    msg: "Localectl status output: {{ localectl_status.stdout }}"
+  when: keymaps.stdout is defined and keymaps.stdout | length > 0 and "'{{ common_keymap }}' in keymaps.stdout"
+  notify:
+    - Restart keyboard configuration
 
 - name: Assert that the keymap is set correctly using localectl status
   assert:
@@ -36,40 +30,32 @@
       - "'Keymap: {{ common_keymap }}' in localectl_status.stdout"
     fail_msg: "Keymap change failed!"
     success_msg: "Keymap set correctly"
+  when: keymaps.stdout is defined and keymaps.stdout | length > 0
 
-- name: Setting keyboard layout to "{{ common_keymap }}" (fallback)
-  lineinfile: 
+- name: Setting keyboard layout to "{{ common_keymap }}" in /etc/default/keyboard (fallback)
+  lineinfile:
     dest: /etc/default/keyboard
     state: present
-    regexp: '^XKBLAYOUT='
+    regexp: "^XKBLAYOUT="
     line: "XKBLAYOUT='{{ common_keymap }}'"
     create: yes
+  when: keymaps.stdout is defined and keymaps.stdout | length > 0
 
 - name: Verify fallback keyboard layout by checking /etc/default/keyboard
   shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2 | sed ''s/"//g'''
   register: fallback_kbdlayout
-  
-#- name: Debug fallback keymap value
-#  debug:
-#    var: fallback_kbdlayout.stdout
+  when: keymaps.stdout is defined and keymaps.stdout | length > 0
 
-#- name: Debug fallback keymap output after trimming
-#  debug:
-#    msg: "Fallback keyboard layout output: '{{ fallback_kbdlayout.stdout }}'"    
-
-#- name: Debug fallback keymap value (as raw)
-#  debug:
-#    var: fallback_kbdlayout.stdout
-
-- name: Assert that the fallback keymap is set correctly (simplified)
+- name: Assert that the fallback keymap is set correctly
   assert:
     that:
-      - "(fallback_kbdlayout.stdout | replace(\"'\", \"\") | trim) == common_keymap"
+      - '(fallback_kbdlayout.stdout | replace("''", "") | trim) == common_keymap'
     fail_msg: "Fallback keyboard layout setting failed!"
     success_msg: "Fallback keyboard layout set correctly!"
+  when: keymaps.stdout is defined and keymaps.stdout | length > 0
 
 - name: Force reconfigure keyboard in non-interactive mode
   command: dpkg-reconfigure keyboard-configuration -f noninteractive
   args:
-    creates: /etc/default/keyboard  # This ensures the task only runs if the keyboard config file doesn't exist
-
+    creates: /etc/default/keyboard # Ensures task only runs if the keyboard config file doesn't exist
+  when: keymaps.stdout is defined and keymaps.stdout | length > 0
