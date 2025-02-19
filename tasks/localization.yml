@@ -48,10 +48,10 @@
 - name: Verify fallback keyboard layout by checking /etc/default/keyboard
   shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2 | sed ''s/"//g'''
   register: fallback_kbdlayout
-
-- name: Debug fallback keyboard layout verification
+  
+- name: Debug fallback keymap value
   debug:
-    msg: "Fallback keyboard layout is now: {{ fallback_kbdlayout.stdout }}"
+    var: fallback_kbdlayout.stdout
 
 - name: Assert that the fallback keymap is set correctly
   assert:
