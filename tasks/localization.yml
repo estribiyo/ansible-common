@@ -41,7 +41,10 @@
 - name: Check if keymap was successfully set
   debug:
     msg: "Keymap set successfully"
-  when: localectl_output is defined and localectl_output.rc == 0
+  when:
+    - localectl_output is defined
+    - localectl_output.rc is defined
+    - localectl_output.rc == 0
 
 - name: Ensure console-setup and keyboard-configuration packages are installed
   apt:
