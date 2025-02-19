@@ -34,13 +34,16 @@
   register: localectl_output
   when: keymaps_stat.stat.exists
 
+- name: Debug localectl output
+  debug:
+    var: localectl_output.stdout
+
 - name: Check if keymap was successfully set
   assert:
     that:
-      - "'Keymap: {{ common_keymap }}' in localectl_output.stdout"
+      - "'Keymap: ' + common_keymap in localectl_output.stdout"
     fail_msg: "Keymap change failed!"
-    success_msg: "Keymap set correctly"
-  when: keymaps_stat.stat.exists
+    success_msg: "Keymap change succeeded!"
 
 - name: Ensure console-setup and keyboard-configuration packages are installed
   apt:
