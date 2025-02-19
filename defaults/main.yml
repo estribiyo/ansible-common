@@ -3,6 +3,6 @@ common_timezone: "Europe/Madrid"
 common_keymap: "es"
 common_fontface: "Terminus"
 common_disks: []
-kbd_version: "2.5.1"
+kbd_version: "2.7"
 kbd_tarball_url: "https://mirrors.edge.kernel.org/pub/linux/utils/kbd/kbd-{{ kbd_version }}.tar.gz"
 kbd_extract_dir: "/tmp/kbd-{{ kbd_version }}"
