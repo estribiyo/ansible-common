@@ -1,18 +1,24 @@
 - name: Check current keyboard layout
   shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2 | sed ''s/"//g'''
   register: kbdlayout
+
+- name: Debug current keyboard layout
   debug:
     msg: "Current keyboard layout is {{ kbdlayout.stdout }}"
 
 - name: Set keymap to "{{ common_keymap }}" using localectl
   command: localectl set-keymap "{{ common_keymap }}"
   register: localectl_output
+
+- name: Debug localectl output
   debug:
     msg: "localectl output: {{ localectl_output }}"
 
 - name: Verify keymap using localectl
   shell: localectl | grep "VC Keymap" | cut -d ' ' -f 4
   register: new_kbdlayout
+
+- name: Debug new keymap after applying localectl
   debug:
     msg: "New keymap after applying localectl: {{ new_kbdlayout.stdout }}"
 
@@ -31,12 +37,16 @@
     line: "XKBLAYOUT='{{ common_keymap }}'"
     create: yes
   register: fallback_kbdlayout
+
+- name: Debug fallback keyboard layout
   debug:
     msg: "Fallback keyboard layout after setting: {{ fallback_kbdlayout.stdout }}"
 
 - name: Verify fallback keyboard layout
   shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2'
   register: fallback_kbdlayout
+
+- name: Debug fallback keyboard layout verification
   debug:
     msg: "Fallback keyboard layout is now: {{ fallback_kbdlayout.stdout }}"
 
