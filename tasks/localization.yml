@@ -44,14 +44,9 @@
     regexp: '^XKBLAYOUT='
     line: "XKBLAYOUT='{{ common_keymap }}'"
     create: yes
-  register: fallback_kbdlayout
 
-- name: Debug fallback keyboard layout
-  debug:
-    msg: "Fallback keyboard layout after setting: {{ fallback_kbdlayout.stdout }}"
-
-- name: Verify fallback keyboard layout
-  shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2'
+- name: Verify fallback keyboard layout by checking /etc/default/keyboard
+  shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2 | sed ''s/"//g'''
   register: fallback_kbdlayout
 
 - name: Debug fallback keyboard layout verification
@@ -61,7 +56,7 @@
 - name: Assert that the fallback keymap is set correctly
   assert:
     that:
-      - fallback_kbdlayout.stdout | replace('"', '') == common_keymap
+      - fallback_kbdlayout.stdout == common_keymap
     fail_msg: "Fallback keyboard layout setting failed!"
     success_msg: "Fallback keyboard layout set correctly"
 
