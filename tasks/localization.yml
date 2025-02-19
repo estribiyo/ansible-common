@@ -36,12 +36,12 @@
 
 - name: Debug localectl output
   debug:
-    var: localectl_output.stdout
+    var: localectl_output
 
 - name: Check if keymap was successfully set
   assert:
     that:
-      - common_keymap in localectl_output.stdout
+      - localectl_output.rc == 0 # Check if the command was successful
     fail_msg: "Keymap change failed!"
     success_msg: "Keymap change succeeded!"
 
@@ -65,7 +65,7 @@
 
 - name: Set keymap to "{{ common_keymap }}" using localectl
   command: localectl set-keymap "{{ common_keymap }}"
-  when: keymaps.stdout | length > 0 and common_keymap in keymaps.stdout
+  when: "'{{ common_keymap }}' in keymaps.stdout | lower"
   notify:
     - Restart keyboard configuration
 
@@ -84,7 +84,6 @@
     regexp: "^XKBLAYOUT="
     line: "XKBLAYOUT='{{ common_keymap }}'"
     create: yes
-  when: keymaps.stdout is defined and keymaps.stdout | length > 0
 
 - name: Verify fallback keyboard layout by checking /etc/default/keyboard
   shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2 | sed ''s/"//g'''
@@ -102,5 +101,6 @@
 - name: Force reconfigure keyboard in non-interactive mode
   command: dpkg-reconfigure keyboard-configuration -f noninteractive
   args:
-    creates: /etc/default/keyboard # Ensures task only runs if the keyboard config file doesn't exist
-  when: keymaps.stdout is defined and keymaps.stdout | length > 0
+    creates: /etc/default/keyboard
+  when: keymaps.stdout is defined and keymaps.stdout | length > 0 and
+    (lookup('file', '/etc/default/keyboard') is not search('XKBLAYOUT={{ common_keymap }}'))
