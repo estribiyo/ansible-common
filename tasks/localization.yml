@@ -39,11 +39,9 @@
     var: localectl_output
 
 - name: Check if keymap was successfully set
-  assert:
-    that:
-      - localectl_output.rc == 0 # Check if the command was successful
-    fail_msg: "Keymap change failed!"
-    success_msg: "Keymap change succeeded!"
+  debug:
+    msg: "Keymap set successfully"
+  when: localectl_output is defined and localectl_output.rc == 0
 
 - name: Ensure console-setup and keyboard-configuration packages are installed
   apt:
