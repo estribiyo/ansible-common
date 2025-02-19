@@ -14,8 +14,8 @@
   debug:
     msg: "localectl output: {{ localectl_output }}"
 
-- name: Verify keymap using localectl
-  shell: localectl | grep "VC Keymap" | cut -d ' ' -f 4
+- name: Verify keymap using localectl status
+  shell: localectl status | grep "VC Keymap" | cut -d ' ' -f 4
   register: new_kbdlayout
 
 - name: Debug new keymap after applying localectl
