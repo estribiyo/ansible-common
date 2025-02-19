@@ -41,7 +41,7 @@
 - name: Check if keymap was successfully set
   assert:
     that:
-      - "'Keymap: ' + common_keymap in localectl_output.stdout"
+      - common_keymap in localectl_output.stdout
     fail_msg: "Keymap change failed!"
     success_msg: "Keymap change succeeded!"
 
@@ -61,13 +61,11 @@
 
 - name: Debug keymaps available
   debug:
-    msg: "Keymaps available: {{ keymaps.stdout }}"
-  when: keymaps.stdout is defined and keymaps.stdout | length > 0
+    var: keymaps.stdout
 
 - name: Set keymap to "{{ common_keymap }}" using localectl
   command: localectl set-keymap "{{ common_keymap }}"
-  register: localectl_output
-  when: keymaps.stdout is defined and keymaps.stdout | length > 0 and "'{{ common_keymap }}' in keymaps.stdout"
+  when: keymaps.stdout | length > 0 and common_keymap in keymaps.stdout
   notify:
     - Restart keyboard configuration
 
