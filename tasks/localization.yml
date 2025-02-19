@@ -1,3 +1,7 @@
+- name: Check current keyboard layout
+  shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2 | sed ''s/"//g'''
+  register: kbdlayout
+
 - name: Change keymap "{{ kbdlayout.stdout }}" to "{{ common_keymap }}"
   block:
     - name: Set keymap to "{{ common_keymap }}" using localectl
