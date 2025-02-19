@@ -68,6 +68,8 @@
     fail_msg: "Fallback keyboard layout setting failed!"
     success_msg: "Fallback keyboard layout set correctly!"
 
-- name: Force reloading the keyboard configuration
-  command: dpkg-reconfigure keyboard-configuration
-  when: kbdlayout.stdout != common_keymap
+- name: Force reconfigure keyboard in non-interactive mode
+  command: dpkg-reconfigure keyboard-configuration -f noninteractive
+  args:
+    creates: /etc/default/keyboard  # This ensures the task only runs if the keyboard config file doesn't exist
+
