@@ -79,7 +79,9 @@
   changed_when: true
 
 - name: Ensure keymap is set correctly
-  when: "'{{ common_keymap }}' in localectl_status.stdout | string"
+  debug:
+    msg: "Keymap is set correctly!"
+  when: common_keymap in localectl_status.stdout
 
 - name: Setting keyboard layout to "{{ common_keymap }}" in /etc/default/keyboard (fallback)
   lineinfile:
