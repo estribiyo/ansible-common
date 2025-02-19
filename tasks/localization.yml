@@ -53,6 +53,10 @@
   debug:
     var: fallback_kbdlayout.stdout
 
+- name: Debug fallback keymap output after trimming
+  debug:
+    msg: "Fallback keyboard layout output: '{{ fallback_kbdlayout.stdout }}'"    
+
 - name: Assert that the fallback keymap is set correctly
   assert:
     that:
