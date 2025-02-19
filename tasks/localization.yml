@@ -63,11 +63,15 @@
   debug:
     var: keymaps.stdout
 
+- name: Set fact to check if common_keymap is available in keymaps
+  set_fact:
+    keymap_exists: "{{ common_keymap in keymaps.stdout | lower }}"
+
 - name: Set keymap to "{{ common_keymap }}" using localectl
   command: localectl set-keymap "{{ common_keymap }}"
-  when: "'{{ common_keymap }}' in keymaps.stdout | lower"
+  when: keymap_exists
   notify:
-    - Restart keyboard configuration
+    - dpkg-reconfigure keyboard-configuration
 
 - name: Assert that the keymap is set correctly using localectl status
   assert:
