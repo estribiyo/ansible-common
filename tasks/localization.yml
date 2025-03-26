@@ -1,3 +1,8 @@
+- name: Make sure dbus service is running
+  systemd_service:
+    state: started
+    name: dbus
+
 - name: Check if /usr/share/keymaps exists
   stat:
     path: /usr/share/keymaps
