@@ -1,41 +1,126 @@
-- name: Generating locales
-  locale_gen: name={{ common_locale }} state=present
+- name: Make sure dbus service is running
+  systemd_service:
+    state: started
+    name: dbus
 
-- name: Check locales
-  shell: "locale | grep ^LANG= | cut -d= -f2"
-  register: locales_out
-  changed_when: locales_out.stdout != common_locale
+- name: Check if /usr/share/keymaps exists
+  stat:
+    path: /usr/share/keymaps
+  register: keymaps_stat
 
-- name: Setting locales "{{ common_locale }}"
-  command: /usr/sbin/update-locale LANG={{ common_locale }} LANGUAGE={{ common_locale }} LC_ALL={{ common_locale }}
-  when: locales_out.stdout != common_locale
+- name: Download kbd tarball if keymaps directory does not exist
+  get_url:
+    url: "{{ kbd_tarball_url }}"
+    dest: "/tmp/kbd-{{ kbd_version }}.tar.gz"
+  when: not keymaps_stat.stat.exists
 
-- name: Linking timezone to /etc/localtime
-  file: src=/usr/share/zoneinfo/{{ common_timezone }} dest=/etc/localtime state=link
+- name: Extract kbd tarball
+  unarchive:
+    src: "/tmp/kbd-{{ kbd_version }}.tar.gz"
+    dest: "/tmp/"
+    remote_src: yes
+  when: not keymaps_stat.stat.exists
 
-- name: Setting timezone to {{ common_timezone }}
-  lineinfile: dest=/etc/timezone state=present line={{ common_timezone }} regexp='.*' create=yes
-  notify: dpkg-reconfigure tzdata
+- name: Copy keymaps from extracted directory to /usr/share/keymaps
+  copy:
+    src: "{{ kbd_extract_dir }}/data/keymaps/"
+    dest: /usr/share/keymaps/
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: yes
+    validate: "test -d {{ item }}"
+  with_fileglob:
+    - "{{ kbd_extract_dir }}/data/keymaps/*"
+  when: not keymaps_stat.stat.exists
 
-- name: Check keyboard layout
-  shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2 | sed ''s/"//g'''
-  register: kbdlayout
-  changed_when: kbdlayout.stdout != common_keymap
+- name: Set keymap using localectl
+  command: localectl set-keymap "{{ common_keymap }}"
+  register: localectl_output
+  when: keymaps_stat.stat.exists
 
-# - name: Setting keyboard layout to "{{ common_keymap }}"
-#   lineinfile: dest=/etc/default/keyboard state=present regexp='^XKBLAYOUT=' line="XKBLAYOUT='{{ common_keymap }}'" create=yes
+- name: Debug localectl output
+  debug:
+    var: localectl_output
 
-- name: Change keymap "{{ kbdlayout.stdout }}" to "{{ common_keymap }}"
-  block:
-    - name: Set keymap to "{{ common_keymap }}" using localectl 
-      command: localectl set-keymap "{{ common_keymap }}"
-  rescue:
-    - name: Setting keyboard layout to "{{ common_keymap }}"
-      lineinfile: dest=/etc/default/keyboard state=present regexp='^XKBLAYOUT=' line="XKBLAYOUT='{{ common_keymap }}'" create=yes
-  notify: dpkg-reconfigure keyboard-configuration
-  when: kbdlayout.stdout != common_keymap
+- name: Check if keymap was successfully set
+  debug:
+    msg: "Keymap set successfully"
+  when:
+    - localectl_output is defined
+    - localectl_output.rc is defined
+    - localectl_output.rc == 0
 
-- name: Installing "{{ common_keymap }}" language for hunspell
+- name: Ensure console-setup and keyboard-configuration packages are installed
   apt:
-    name: "hunspell-{{ common_keymap }}"
+    name:
+      - console-setup
+      - keyboard-configuration
     state: present
+    update_cache: yes
+
+- name: Check if keymaps are available
+  command: localectl list-keymaps
+  register: keymaps
+  changed_when: false
+  failed_when: false
+
+- name: Debug keymaps available
+  debug:
+    var: keymaps.stdout
+
+- name: Capture localectl status
+  command: localectl status
+  register: localectl_status
+  changed_when: false
+
+- name: Set fact to check if common_keymap is available in keymaps
+  set_fact:
+    keymap_exists: "{{ common_keymap in keymaps.stdout | lower }}"
+
+- name: Set keymap to "{{ common_keymap }}" using localectl
+  command: localectl set-keymap "{{ common_keymap }}"
+  when: common_keymap is defined and common_keymap not in localectl_status.stdout
+  changed_when: true
+
+- name: Ensure keymap is set correctly
+  debug:
+    msg: "Keymap is set correctly!"
+  when: common_keymap in localectl_status.stdout
+
+- name: Setting keyboard layout to "{{ common_keymap }}" in /etc/default/keyboard (fallback)
+  lineinfile:
+    dest: /etc/default/keyboard
+    state: present
+    regexp: "^XKBLAYOUT="
+    line: "XKBLAYOUT='{{ common_keymap }}'"
+    create: yes
+
+- name: Verify fallback keyboard layout by checking /etc/default/keyboard
+  shell: 'cat /etc/default/keyboard | grep XKBLAYOUT | cut -d''='' -f2 | sed ''s/"//g'''
+  register: fallback_kbdlayout
+  when: keymaps.stdout is defined and keymaps.stdout | length > 0
+
+- name: Assert that the fallback keymap is set correctly
+  assert:
+    that:
+      - '(fallback_kbdlayout.stdout | replace("''", "") | trim) == common_keymap'
+    fail_msg: "Fallback keyboard layout setting failed!"
+    success_msg: "Fallback keyboard layout set correctly!"
+  when: keymaps.stdout is defined and keymaps.stdout | length > 0
+
+- name: Check if common_keymap is set in /etc/default/keyboard
+  shell: 'grep XKBLAYOUT /etc/default/keyboard | cut -d "=" -f2 | sed "s/\"//g"'
+  register: current_kbdlayout
+  changed_when: false
+  failed_when: false
+
+- name: Set fact to check if we need to force reconfigure keyboard
+  set_fact:
+    reconfigure_kbd: "{{ keymaps.stdout | length > 0 and current_kbdlayout.stdout != common_keymap }}"
+
+- name: Force reconfigure keyboard in non-interactive mode
+  command: dpkg-reconfigure keyboard-configuration -f noninteractive
+  args:
+    creates: /etc/default/keyboard
+  when: reconfigure_kbd

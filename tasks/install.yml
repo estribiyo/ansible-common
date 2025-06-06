@@ -15,6 +15,7 @@
       - curl
       - bat
       - nfs-common
+      - dbus
 
 - name: Localization
   include_tasks:
@@ -23,6 +24,15 @@
 - name: Console
   include_tasks:
     file: console.yml
+
+- name: Aliases
+  lineinfile:
+    dest: /etc/bash.bashrc
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - { regexp: "^alias cat=.+$", line: 'alias cat="batcat"' }
+    - { regexp: "^alias ls=.+$", line: 'alias ls="ls -la"' }
 
 - name: Mount points
   include_tasks:
